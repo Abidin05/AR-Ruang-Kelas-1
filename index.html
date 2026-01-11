@@ -1,0 +1,242 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>AR Ruang Kelas</title>
+    <script src="https://aframe.io/releases/1.4.2/aframe.min.js"></script>
+    <script src="https://raw.githack.com/AR-js-org/AR.js/master/aframe/build/aframe-ar.js"></script>
+    
+    <style>
+
+        body { 
+            margin: 0; 
+            overflow: hidden; 
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #121212;
+        }
+        
+        .top-bar {
+            position: fixed;
+            top: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            color: white;
+            padding: 8px 25px;
+            border-radius: 50px;
+            z-index: 999;
+            font-size: 13px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.3);
+        }
+
+        .control-panel {
+            position: fixed;
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 92%;
+            max-width: 500px;
+            background: rgba(0, 0, 0, 0.6);
+            backdrop-filter: blur(15px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 20px;
+            padding: 15px;
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 8px;
+            z-index: 999;
+            transition: transform 0.3s ease;
+        }
+
+        .panel-label {
+            grid-column: span 3;
+            color: #aaa;
+            font-size: 10px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin-top: 5px;
+            margin-bottom: 2px;
+            text-align: center;
+        }
+
+        .btn {
+            border: none;
+            border-radius: 12px;
+            padding: 10px 5px;
+            font-size: 12px;
+            font-weight: 600;
+            cursor: pointer;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            gap: 4px;
+            color: white;
+            min-height: 50px;
+            transition: all 0.1s;
+        }
+        .btn:active { transform: scale(0.95); }
+
+        .btn-primary { background: rgba(33, 150, 243, 0.8); }
+        .btn-action  { background: rgba(76, 175, 80, 0.8); }
+        .btn-danger  { background: rgba(244, 67, 54, 0.8); }
+        .btn-dark    { background: rgba(255, 255, 255, 0.15); }
+        
+        .icon { font-size: 18px; }
+    </style>
+</head>
+
+<body>
+
+    <div class="top-bar">
+        <span id="status-text">Mencari Marker Hiro... 🔍</span>
+    </div>
+
+    <div class="control-panel" id="ui-panel">
+        
+        <div class="panel-label">Kontrol Utama</div>
+        <button class="btn btn-action" onclick="aksiLampu()"><span class="icon">💡</span>Lampu</button>
+        <button class="btn btn-action" onclick="aksiAutoPutar()"><span class="icon">🔄</span>Auto Putar</button>
+        <button class="btn btn-danger" onclick="aksiReset()"><span class="icon">🏠</span>Reset</button>
+
+        <div class="panel-label">Rotasi Manual</div>
+        <div style="background:none;"></div> 
+        <button class="btn btn-primary" onclick="manualRotasi('x', -1)"><span class="icon">⬆️</span>Atas</button>
+        <div style="background:none;"></div>
+
+        <button class="btn btn-primary" onclick="manualRotasi('y', -1)"><span class="icon">⬅️</span>Kiri</button>
+        <button class="btn btn-primary" onclick="manualRotasi('x', 1)"><span class="icon">⬇️</span>Bawah</button>
+        <button class="btn btn-primary" onclick="manualRotasi('y', 1)"><span class="icon">➡️</span>Kanan</button>
+
+        <div class="panel-label">Zoom & UI</div>
+        <button class="btn btn-dark" onclick="aksiZoom(-1)"><span class="icon">➖</span>Perkecil</button>
+        <button class="btn btn-dark" onclick="aksiZoom(1)"><span class="icon">➕</span>Perbesar</button>
+        <button class="btn btn-dark" id="btn-toggle" onclick="toggleUI()" style="background: rgba(255, 87, 34, 0.8);"><span class="icon">👁️</span>Hide UI</button>
+
+    </div>
+
+    <button id="btn-show-floating" onclick="toggleUI()" 
+            style="display:none; position:fixed; bottom:20px; left:50%; transform:translateX(-50%); z-index:1000; padding:10px 20px; border-radius:30px; border:none; background:#ff5722; color:white; font-weight:bold; cursor:pointer;">
+        👁️ Show UI
+    </button>
+
+    <a-scene 
+        embedded 
+        arjs="sourceType: webcam; debugUIEnabled: false; detectionMode: mono_and_matrix; matrixCodeType: 3x3;"
+        renderer="logarithmicDepthBuffer: true; precision: high; antialias: true;"
+        vr-mode-ui="enabled: false">
+        
+        <a-entity light="type: ambient; intensity: 2.0;"></a-entity>
+
+        <a-marker preset="hiro" id="marker-hiro">
+            
+            <a-entity id="group-model" scale="0.08 0.08 0.08" rotation="0 0 0">
+                
+                <a-entity id="lampu-dalam" 
+                          light="type: point; intensity: 1.5; distance: 20; decay: 1" 
+                          position="0 4 0">
+                </a-entity>
+
+                <a-entity gltf-model="url(./Galeri Art Rama.glb)" position="0 0 0"></a-entity>
+
+                <a-image src="./foto_saya.png" position="1.5 0.5 0" scale="1 1 1"></a-image>
+
+            </a-entity>
+
+        </a-marker>
+        <a-entity camera></a-entity>
+    </a-scene>
+
+    <script>
+        var group = document.getElementById('group-model');
+        var lampu = document.getElementById('lampu-dalam'); 
+        var panel = document.getElementById('ui-panel');
+        var btnShow = document.getElementById('btn-show-floating');
+        var marker = document.getElementById('marker-hiro');
+        var statusText = document.getElementById('status-text');
+
+        // STATE VARIABLES
+        var isAutoRotating = false;
+        var isLampuOn = true;
+        var currentScale = 0.08;
+        var rotationSpeed = 0.5;
+
+        // 1. KONTROL LAMPU
+        function aksiLampu() {
+            isLampuOn = !isLampuOn;
+            lampu.setAttribute('light', 'intensity', isLampuOn ? 1.5 : 0.0);
+        }
+
+        // 2. AUTO PUTAR
+        function aksiAutoPutar() {
+            isAutoRotating = !isAutoRotating;
+        }
+
+        // 3. MANUAL ROTASI
+        function manualRotasi(sumbu, arah) {
+            isAutoRotating = false; 
+            var rot = group.getAttribute('rotation');
+            var step = 15;
+            if(sumbu === 'x') {
+                group.setAttribute('rotation', {x: rot.x + (arah * step), y: rot.y, z: rot.z});
+            } else {
+                group.setAttribute('rotation', {x: rot.x, y: rot.y + (arah * step), z: rot.z});
+            }
+        }
+
+        // 4. ZOOM
+        function aksiZoom(arah) {
+            currentScale += (arah * 0.01); 
+            if(currentScale < 0.01) currentScale = 0.01;
+            if(currentScale > 0.8) currentScale = 0.8;
+            group.setAttribute('scale', {x: currentScale, y: currentScale, z: currentScale});
+        }
+
+        // 5. RESET
+        function aksiReset() {
+            isAutoRotating = false;
+            isLampuOn = true;
+            lampu.setAttribute('light', 'intensity', 1.5);
+            currentScale = 0.08;
+            group.setAttribute('rotation', '0 0 0');
+            group.setAttribute('scale', '0.08 0.08 0.08');
+        }
+
+        // 6. TOGGLE UI
+        function toggleUI() {
+            if(panel.style.display === 'none') {
+                panel.style.display = 'grid';
+                btnShow.style.display = 'none';
+            } else {
+                panel.style.display = 'none';
+                btnShow.style.display = 'block';
+            }
+        }
+
+        // ANIMASI LOOP
+        AFRAME.registerComponent('loop-putar', {
+            tick: function() {
+                if(isAutoRotating) {
+                    var rot = group.getAttribute('rotation');
+                    group.setAttribute('rotation', {x: rot.x, y: rot.y + rotationSpeed, z: rot.z});
+                }
+            }
+        });
+        document.querySelector('a-scene').setAttribute('loop-putar', '');
+
+        // DETEKSI MARKER
+        marker.addEventListener('markerFound', function() {
+            statusText.innerText = "✅ Galeri Terdeteksi!";
+            statusText.style.color = "#81C784";
+        });
+        marker.addEventListener('markerLost', function() {
+            statusText.innerText = "Mencari Marker Hiro... 🔍";
+            statusText.style.color = "white";
+        });
+    </script>
+</body>
+</html>
